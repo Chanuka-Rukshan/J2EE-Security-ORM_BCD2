@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.security.enterprise.AuthenticationException;
 import jakarta.security.enterprise.AuthenticationStatus;
+import jakarta.security.enterprise.authentication.mechanism.http.AutoApplySession;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpMessageContext;
 import jakarta.security.enterprise.credential.UsernamePasswordCredential;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @ApplicationScoped
+@AutoApplySession
 public class AuthMechanism implements HttpAuthenticationMechanism {
 
     @Inject
@@ -25,9 +27,6 @@ public class AuthMechanism implements HttpAuthenticationMechanism {
 
         System.out.println("AuthMechanism: validateRequest");
 
-        if (!context.isProtected()) {
-            return context.doNothing();
-        }
 
         String username = request.getParameter("username");
         String password = request.getParameter("password");
@@ -37,15 +36,15 @@ public class AuthMechanism implements HttpAuthenticationMechanism {
             if (result.getStatus() == CredentialValidationResult.Status.VALID) {
                 return context.notifyContainerAboutLogin(result);
             } else {
-                try {
-                    response.sendRedirect(request.getContextPath() + "/login.jsp");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                context.redirect(request.getContextPath() + "/login.jsp");
                 return AuthenticationStatus.SEND_FAILURE;
             }
         }
 
-        return context.responseUnauthorized();
+        if (!context.isProtected()) {
+            return context.doNothing();
+        }
+
+        return context.redirect(request.getContextPath() + "/login.jsp");
     }
 }
