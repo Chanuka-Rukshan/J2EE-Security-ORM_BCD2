@@ -7,9 +7,12 @@ import jakarta.security.enterprise.AuthenticationStatus;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpMessageContext;
 import jakarta.security.enterprise.credential.UsernamePasswordCredential;
+import jakarta.security.enterprise.identitystore.CredentialValidationResult;
 import jakarta.security.enterprise.identitystore.IdentityStore;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
 
 @ApplicationScoped
 public class AuthMechanism implements HttpAuthenticationMechanism {
@@ -30,7 +33,17 @@ public class AuthMechanism implements HttpAuthenticationMechanism {
         String password = request.getParameter("password");
 
         if (username == null || password == null) {
-            identityStore.validate(new UsernamePasswordCredential(username, password));
+            CredentialValidationResult result = identityStore.validate(new UsernamePasswordCredential(username, password));
+            if (result.getStatus() == CredentialValidationResult.Status.VALID) {
+                return context.notifyContainerAboutLogin(result);
+            } else {
+                try {
+                    response.sendRedirect(request.getContextPath() + "/login.jsp");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                return AuthenticationStatus.SEND_FAILURE;
+            }
         }
 
         return context.responseUnauthorized();
