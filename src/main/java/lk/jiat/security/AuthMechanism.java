@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.security.enterprise.AuthenticationException;
 import jakarta.security.enterprise.AuthenticationStatus;
+import jakarta.security.enterprise.authentication.mechanism.http.AuthenticationParameters;
 import jakarta.security.enterprise.authentication.mechanism.http.AutoApplySession;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpMessageContext;
@@ -25,25 +26,22 @@ public class AuthMechanism implements HttpAuthenticationMechanism {
 
         System.out.println("AuthMechanism: validateRequest");
 
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-
-        // username saha password dekama denawa nam witharai validate karanna
-        if (username != null && password != null) {
-            CredentialValidationResult result = identityStore.validate(new UsernamePasswordCredential(username, password));
+        AuthenticationParameters authenticationParameters = context.getAuthParameters();
+        if (authenticationParameters.getCredential() != null) {
+            CredentialValidationResult result = identityStore.validate(authenticationParameters.getCredential());
             if (result.getStatus() == CredentialValidationResult.Status.VALID) {
                 return context.notifyContainerAboutLogin(result);
             } else {
-                context.redirect(request.getContextPath() + "/login.jsp");
                 return AuthenticationStatus.SEND_FAILURE;
             }
         }
 
-        // Credentials na — protected resource ekakda kiyala balanna
+
         if (!context.isProtected()) {
-            return context.doNothing();
+            context.redirect(request.getContextPath() + "/login");
+            return AuthenticationStatus.SEND_FAILURE;
         }
 
-        return context.redirect(request.getContextPath() + "/login.jsp");
+        return context.doNothing();
     }
 }
