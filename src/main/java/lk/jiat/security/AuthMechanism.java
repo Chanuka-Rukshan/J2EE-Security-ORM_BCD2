@@ -13,8 +13,6 @@ import jakarta.security.enterprise.identitystore.IdentityStore;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-
 @ApplicationScoped
 @AutoApplySession
 public class AuthMechanism implements HttpAuthenticationMechanism {
@@ -27,11 +25,11 @@ public class AuthMechanism implements HttpAuthenticationMechanism {
 
         System.out.println("AuthMechanism: validateRequest");
 
-
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        if (username == null || password == null) {
+        // username saha password dekama denawa nam witharai validate karanna
+        if (username != null && password != null) {
             CredentialValidationResult result = identityStore.validate(new UsernamePasswordCredential(username, password));
             if (result.getStatus() == CredentialValidationResult.Status.VALID) {
                 return context.notifyContainerAboutLogin(result);
@@ -41,6 +39,7 @@ public class AuthMechanism implements HttpAuthenticationMechanism {
             }
         }
 
+        // Credentials na — protected resource ekakda kiyala balanna
         if (!context.isProtected()) {
             return context.doNothing();
         }
