@@ -11,6 +11,6 @@
     <title>J2EE Security ORM | Index</title>
 </head>
 <body>
-<h1>J2EE Security ORM </h1>
+<h1>J2EE Security ORM Index </h1>
 </body>
 </html>

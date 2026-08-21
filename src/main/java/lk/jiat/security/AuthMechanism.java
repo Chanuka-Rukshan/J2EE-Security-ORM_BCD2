@@ -8,9 +8,8 @@ import jakarta.security.enterprise.authentication.mechanism.http.AuthenticationP
 import jakarta.security.enterprise.authentication.mechanism.http.AutoApplySession;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpAuthenticationMechanism;
 import jakarta.security.enterprise.authentication.mechanism.http.HttpMessageContext;
-import jakarta.security.enterprise.credential.UsernamePasswordCredential;
 import jakarta.security.enterprise.identitystore.CredentialValidationResult;
-import jakarta.security.enterprise.identitystore.IdentityStore;
+import jakarta.security.enterprise.identitystore.IdentityStoreHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -19,7 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class AuthMechanism implements HttpAuthenticationMechanism {
 
     @Inject
-    private IdentityStore identityStore;
+    private IdentityStoreHandler identityStore;
 
     @Override
     public AuthenticationStatus validateRequest(HttpServletRequest request, HttpServletResponse response, HttpMessageContext context) throws AuthenticationException {
@@ -36,10 +35,8 @@ public class AuthMechanism implements HttpAuthenticationMechanism {
             }
         }
 
-
-        if (!context.isProtected()) {
-            context.redirect(request.getContextPath() + "/login");
-            return AuthenticationStatus.SEND_FAILURE;
+        if (context.isProtected()) {
+            return context.redirect(request.getContextPath() + "/login");
         }
 
         return context.doNothing();
